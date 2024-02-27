@@ -4,9 +4,23 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.neoforged.gradle.userdev' version '7.0.80'
+    id 'net.neoforged.gradleutils' version '3.0.0-alpha.11'
+    id "me.modmuss50.mod-publish-plugin" version "0.5.1"
 }
 
-version = mod_version
+gradleutils.version {
+    branches {
+        suffixBranch = true
+    }
+}
+
+changelog {
+    from "0.1"
+}
+
+logger.lifecycle "GrandPower version ${gradleutils.version}"
+
+version = gradleutils.version.toString()
 group = mod_group_id
 
 repositories {
@@ -17,8 +31,12 @@ base {
     archivesName = mod_id
 }
 
-// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java {
+    // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+    withSourcesJar()
+}
 
 //minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
 //minecraft.accessTransformers.entry public net.minecraft.client.Minecraft textureManager # textureManager
@@ -113,7 +131,7 @@ tasks.withType(ProcessResources).configureEach {
             minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
             neo_version         : neo_version, neo_version_range: neo_version_range,
             loader_version_range: loader_version_range,
-            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+            mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: version,
             mod_authors         : mod_authors, mod_description: mod_description,
     ]
     inputs.properties replaceProperties
@@ -132,11 +150,32 @@ publishing {
     }
     repositories {
         maven {
-            url "file://${project.projectDir}/repo"
+            credentials {
+                username = providers.environmentVariable("MODMAVEN_USER").get()
+                password = providers.environmentVariable("MODMAVEN_PASSWORD").get()
+            }
+            name = "modmaven"
+            url = "https://modmaven.dev/artifactory/local-releases/"
         }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+afterEvaluate { // afterEvaluate to make sure that the createChangelog task is registered
+    publishMods {
+        file = jar.archiveFile
+        changelog = tasks.named("createChangelog").flatMap { it.outputFile }.map { it.asFile.text }
+        type = STABLE
+        modLoaders.add "neoforge"
+
+        curseforge {
+            projectId = "980156"
+            projectSlug = "grandpower"
+            accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+            minecraftVersions.add(project.minecraft_version)
+        }
+    }
 }

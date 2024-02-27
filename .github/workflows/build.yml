@@ -22,3 +22,18 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: build
+
+      - name: Publish to ModMaven
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publishToModMaven
+        env:
+          MODMAVEN_USER: ${{ secrets.MODMAVEN_USER }}
+          MODMAVEN_PASSWORD: ${{ secrets.MODMAVEN_PASSWORD }}
+
+      - name: Publish to CurseForge
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publishMods
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
