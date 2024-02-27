@@ -15,7 +15,7 @@ gradleutils.version {
 }
 
 changelog {
-    from "0.1"
+    from "1.0"
 }
 
 logger.lifecycle "GrandPower version ${gradleutils.version}"
@@ -150,9 +150,11 @@ publishing {
     }
     repositories {
         maven {
-            credentials {
-                username = providers.environmentVariable("MODMAVEN_USER").get()
-                password = providers.environmentVariable("MODMAVEN_PASSWORD").get()
+            if (System.getenv("MODMAVEN_USER") != null && System.getenv("MODMAVEN_PASSWORD") != null) {
+                credentials {
+                    username = System.getenv("MODMAVEN_USER")
+                    password = System.getenv("MODMAVEN_PASSWORD")
+                }
             }
             name = "modmaven"
             url = "https://modmaven.dev/artifactory/local-releases/"

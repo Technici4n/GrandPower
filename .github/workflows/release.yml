@@ -1,6 +1,13 @@
-name: Build
+name: Release
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  statuses: write
 
 jobs:
   build:
@@ -26,7 +33,7 @@ jobs:
       - name: Publish to ModMaven
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: publishToModMaven
+          arguments: publish
         env:
           MODMAVEN_USER: ${{ secrets.MODMAVEN_USER }}
           MODMAVEN_PASSWORD: ${{ secrets.MODMAVEN_PASSWORD }}
