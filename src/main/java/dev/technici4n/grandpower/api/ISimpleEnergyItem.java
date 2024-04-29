@@ -24,31 +24,28 @@
 package dev.technici4n.grandpower.api;
 
 import dev.technici4n.grandpower.impl.SimpleItemEnergyStorageImpl;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Simple battery-like energy containing item. If this is implemented on an item:
  * <ul>
  * <li>The energy will directly be stored in the NBT.</li>
  * <li>Helper functions in this class to work with the stored energy can be used.</li>
- * <li>Use {@link #createStorage(ItemStack, long, long, long)} to create a storage implementation.</li>
+ * <li>Use {@link #createStorage(ItemStack, DataComponentType, long, long, long)} to create a storage implementation.</li>
  * <li>Use {@link #registerStorage(RegisterCapabilitiesEvent, Item)} to directly register the capability for items implementing this class.</li>
  * </ul>
  */
 public interface ISimpleEnergyItem {
-    String ENERGY_KEY = "energy";
-
     /**
      * Return a base energy storage implementation for items, with fixed capacity, and per-operation insertion and extraction limits.
      * This is used internally for items that implement SimpleEnergyItem, but it may also be used outside of that.
-     * The energy is stored in the {@code energy} tag of the stacks, the same as the constant {@link #ENERGY_KEY}.
+     * The energy is stored in the provided component.
      */
-    static ILongEnergyStorage createStorage(ItemStack stack, long capacity, long maxInsert, long maxExtract) {
-        return new SimpleItemEnergyStorageImpl(stack, capacity, maxInsert, maxExtract);
+    static ILongEnergyStorage createStorage(ItemStack stack, DataComponentType<Long> component, long capacity, long maxInsert, long maxExtract) {
+        return new SimpleItemEnergyStorageImpl(stack, component, capacity, maxInsert, maxExtract);
     }
 
     /**
@@ -59,9 +56,11 @@ public interface ISimpleEnergyItem {
      * but might not wish to be registered to the standard energy storage capability.
      */
     static <T extends Item & ISimpleEnergyItem> void registerStorage(RegisterCapabilitiesEvent event, T item) {
-        event.registerItem(ILongEnergyStorage.ITEM, (stack, context) -> createStorage(stack, item.getEnergyCapacity(stack),
+        event.registerItem(ILongEnergyStorage.ITEM, (stack, context) -> createStorage(stack, item.getEnergyComponent(), item.getEnergyCapacity(stack),
                 item.getEnergyMaxInput(stack), item.getEnergyMaxOutput(stack)), item);
     }
+
+    DataComponentType<Long> getEnergyComponent();
 
     /**
      * @param stack Current stack.
@@ -85,7 +84,7 @@ public interface ISimpleEnergyItem {
      * @return The energy stored in the stack. Count is ignored.
      */
     default long getStoredEnergy(ItemStack stack) {
-        return getStoredEnergyUnchecked(stack);
+        return getStoredEnergyUnchecked(stack, getEnergyComponent());
     }
 
     /**
@@ -93,7 +92,7 @@ public interface ISimpleEnergyItem {
      * It's up to callers to ensure that the new amount is >= 0 and <= capacity.
      */
     default void setStoredEnergy(ItemStack stack, long newAmount) {
-        setStoredEnergyUnchecked(stack, newAmount);
+        setStoredEnergyUnchecked(stack, getEnergyComponent(), newAmount);
     }
 
     /**
@@ -120,26 +119,19 @@ public interface ISimpleEnergyItem {
     /**
      * @return The currently stored energy, ignoring the count and without checking the current item.
      */
-    static long getStoredEnergyUnchecked(ItemStack stack) {
-        return getStoredEnergyUnchecked(stack.getTag());
-    }
-
-    /**
-     * @return The currently stored energy of this raw tag.
-     */
-    static long getStoredEnergyUnchecked(@Nullable CompoundTag nbt) {
-        return nbt != null ? nbt.getLong(ENERGY_KEY) : 0;
+    static long getStoredEnergyUnchecked(ItemStack stack, DataComponentType<Long> component) {
+        return stack.getOrDefault(component, 0L);
     }
 
     /**
      * Set the energy, ignoring the count and without checking the current item.
      */
-    static void setStoredEnergyUnchecked(ItemStack stack, long newAmount) {
+    static void setStoredEnergyUnchecked(ItemStack stack, DataComponentType<Long> component, long newAmount) {
         if (newAmount == 0) {
             // Make sure newly crafted energy containers stack with emptied ones.
-            stack.removeTagKey(ENERGY_KEY);
+            stack.remove(component);
         } else {
-            stack.getOrCreateTag().putLong(ENERGY_KEY, newAmount);
+            stack.set(component, newAmount);
         }
     }
 }

@@ -25,22 +25,25 @@ package dev.technici4n.grandpower.impl;
 
 import dev.technici4n.grandpower.api.ILongEnergyStorage;
 import dev.technici4n.grandpower.api.ISimpleEnergyItem;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Do not use this class directly,
- * obtain instances from {@link ISimpleEnergyItem#createStorage(ItemStack, long, long, long)}.
+ * obtain instances from {@link ISimpleEnergyItem#createStorage(ItemStack, DataComponentType, long, long, long)}.
  */
 // TODO unclear if we should account for stack size or not
 @ApiStatus.Internal
 public final class SimpleItemEnergyStorageImpl implements ILongEnergyStorage {
     private final ItemStack stack;
+    private final DataComponentType<Long> component;
     private final long capacity;
     private final long maxInsert, maxExtract;
 
-    public SimpleItemEnergyStorageImpl(ItemStack stack, long capacity, long maxInsert, long maxExtract) {
+    public SimpleItemEnergyStorageImpl(ItemStack stack, DataComponentType<Long> component, long capacity, long maxInsert, long maxExtract) {
         this.stack = stack;
+        this.component = component;
         this.capacity = capacity;
         this.maxInsert = maxInsert;
         this.maxExtract = maxExtract;
@@ -56,7 +59,7 @@ public final class SimpleItemEnergyStorageImpl implements ILongEnergyStorage {
 
         if (insertedPerCount > 0) {
             if (!simulate) {
-                ISimpleEnergyItem.setStoredEnergyUnchecked(stack, currentAmountPerCount + insertedPerCount);
+                ISimpleEnergyItem.setStoredEnergyUnchecked(stack, component, currentAmountPerCount + insertedPerCount);
             }
             return insertedPerCount * count;
         }
@@ -74,7 +77,7 @@ public final class SimpleItemEnergyStorageImpl implements ILongEnergyStorage {
 
         if (extractedPerCount > 0) {
             if (!simulate) {
-                ISimpleEnergyItem.setStoredEnergyUnchecked(stack, currentAmountPerCount - extractedPerCount);
+                ISimpleEnergyItem.setStoredEnergyUnchecked(stack, component, currentAmountPerCount - extractedPerCount);
             }
             return extractedPerCount * count;
         }
@@ -84,7 +87,7 @@ public final class SimpleItemEnergyStorageImpl implements ILongEnergyStorage {
 
     @Override
     public long getAmount() {
-        return stack.getCount() * ISimpleEnergyItem.getStoredEnergyUnchecked(stack);
+        return stack.getCount() * ISimpleEnergyItem.getStoredEnergyUnchecked(stack, component);
     }
 
     @Override
