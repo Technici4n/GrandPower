@@ -23,7 +23,7 @@ public class GrandPowerImpl {
     public static final String MOD_ID = "grandpower";
 
     public static ResourceLocation id(String path) {
-        return new ResourceLocation(MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public GrandPowerImpl(IEventBus modBus) {
