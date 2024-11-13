@@ -7,7 +7,40 @@ Simple Energy API with support for long amounts, and full interoperability with 
 - Useful default implementations and utility methods.
 
 ## Adding GrandPower to your project
-TODO
+Add the modmaven repository:
+```gradle
+repositories {
+    maven {
+        url "https://modmaven.dev/"
+        content {
+            includeGroup "dev.technici4n"
+        }
+    }
+}
+```
+
+Add the version you want to use as a Gradle property:
+```properties
+# Latest version can be found at https://modmaven.dev/dev/technici4n/GrandPower/
+# Make sure you choose a version that is compatible with your Minecraft version (e.g. 3.x.x for Minecraft 1.21.1).
+grandpower_version=3.0.0
+```
+
+Then, add GrandPower to your project:
+```gradle
+dependencies {
+    api "dev.technici4n:GrandPower:${project.grandpower_version}"
+}
+```
+
+If you want to include GrandPower in your mod jar directly, you can use the following line instead:
+(This assumes that you are using the [ModDevGradle](https://github.com/neoforged/ModDevGradle) plugin.)
+```gradle
+dependencies {
+    api jarJar("dev.technici4n:GrandPower:${project.grandpower_version}")
+}
+```
+
 
 ## Using GrandPower
 Just use [`ILongEnergyStorage`](src/main/java/dev/technici4n/grandpower/api/ILongEnergyStorage.java)
