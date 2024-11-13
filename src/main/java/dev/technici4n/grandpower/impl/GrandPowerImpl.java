@@ -8,6 +8,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -27,7 +28,7 @@ public class GrandPowerImpl {
     }
 
     public GrandPowerImpl(IEventBus modBus) {
-        modBus.addListener(GrandPowerImpl::initCapabilities);
+        modBus.addListener(EventPriority.LOW, GrandPowerImpl::initCapabilities);
     }
 
     private static void initCapabilities(RegisterCapabilitiesEvent event) {
